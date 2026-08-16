@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TaskForge</title>
+  <style>
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      max-width: 700px;
+      margin: 40px auto;
+      padding: 0 20px;
+      background: #f6f7fb;
+      color: #1f2430;
+    }
+    h1 { margin-bottom: 4px; }
+    p.description { color: #555; margin-top: 0; }
+    button {
+      background: #3454d1;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      margin-bottom: 20px;
+    }
+    button:hover { background: #2a41a8; }
+    ul { list-style: none; padding: 0; }
+    li {
+      background: white;
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-bottom: 10px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+    .task-title { font-weight: bold; font-size: 16px; }
+    .task-meta { font-size: 12px; color: #777; margin-top: 4px; }
+    .status {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 12px;
+      margin-left: 8px;
+    }
+    .status.done { background: #d7f5df; color: #1c7a3a; }
+    .status.pending { background: #fdeccf; color: #a15c00; }
+  </style>
+</head>
+<body>
+  <h1>TaskForge</h1>
+  <p class="description">A simple task list backed by the TaskForge API.</p>
+
+  <button id="refreshBtn">Refresh</button>
+
+  <ul id="taskList"></ul>
+
+  <script>
+    const taskList = document.getElementById('taskList');
+    const refreshBtn = document.getElementById('refreshBtn');
+
+    async function loadTasks() {
+      taskList.innerHTML = '<li>Loading tasks...</li>';
+
+      try {
+        const response = await fetch('/tasks');
+
+        if (!response.ok) {
+          throw new Error('Failed to load tasks');
+        }
+
+        const tasks = await response.json();
+        renderTasks(tasks);
+      } catch (err) {
+        taskList.innerHTML = `<li>Error loading tasks: ${err.message}</li>`;
+      }
+    }
+
+    function renderTasks(tasks) {
+      if (tasks.length === 0) {
+        taskList.innerHTML = '<li>No tasks yet.</li>';
+        return;
+      }
+
+      taskList.innerHTML = tasks
+        .map((task) => {
+          const title = task.title || '(untitled task)';
+          const statusClass = task.complete ? 'done' : 'pending';
+          const statusLabel = task.complete ? 'Complete' : 'Pending';
+          const created = new Date(task.createdAt).toLocaleString();
+
+          return `
+            <li>
+              <span class="task-title">${title}</span>
+              <span class="status ${statusClass}">${statusLabel}</span>
+              <div class="task-meta">Created: ${created}</div>
+            </li>
+          `;
+        })
+        .join('');
+    }
+
+    refreshBtn.addEventListener('click', loadTasks);
+
+    // Load tasks automatically when the page opens.
+    loadTasks();
+  </script>
+</body>
+</html>
