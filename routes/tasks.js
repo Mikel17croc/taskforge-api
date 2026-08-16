@@ -140,18 +140,26 @@ router.put('/:id', async (req, res, next) => {
 
     const { title, complete } = req.body || {};
 
-    if (title !== undefined && !isValidTitle(title)) {
-      return next(httpError(400, 'Title must be a non-empty string'));
+    // PUT requires a valid title.
+    if (!isValidTitle(title)) {
+      return next(
+        httpError(400, 'Title is required and must be a non-empty string')
+      );
     }
 
+    // If complete is supplied, it must be a boolean.
     if (complete !== undefined && typeof complete !== 'boolean') {
       return next(httpError(400, 'Complete must be a boolean'));
     }
 
-    if (title !== undefined) task.title = title.trim();
-    if (complete !== undefined) task.complete = complete;
+    task.title = title.trim();
+
+    if (complete !== undefined) {
+      task.complete = complete;
+    }
 
     await writeTasks(tasks);
+
     res.status(200).json(task);
   } catch (err) {
     next(err);
